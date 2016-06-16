@@ -215,7 +215,7 @@ function generate(basePath, app, config, onDone) {
 
 function generateSite() {
   let basePath = this.basePath
-    , gulpargs = "es6 stylesprepro assets close".split(' ')
+    , gulpargs = "es6 stylesprepro assets".split(' ')
     , config = this.config
     , app = this.application
     ;
@@ -225,6 +225,26 @@ function generateSite() {
   });
   gp.stderr.on('data', function(data){
     Logger.log('critical', data);
+  });
+  let es6Done = false;
+  let stylesDone = false;
+  let assetsDone = false;
+  gp.stdout.on('data', (data) => {
+    if(data.indexOf("Finished 'es6'")>-1){
+      es6Done = true;
+    }
+    if(data.indexOf("Finished 'stylesprepro'")>-1){
+      stylesDone = true;
+    }
+    if(data.indexOf("Finished 'assets'")>-1){
+      assetsDone = true;
+    }
+    if(es6Done && stylesDone && assetsDone){
+      setTimeout(function() {
+        gp.kill('SIGHUP');
+        Logger.log('notice', 'Gulp Tasks Done...');
+      }, 1000);
+    }
   });
   Logger.log('notice', 'Generating...');
   gp.on('close', function(code){
